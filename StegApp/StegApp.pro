@@ -25,6 +25,9 @@ HEADERS += \
 FORMS += \
     mainwindow.ui
 
+#For style sheet for details see - https://github.com/ColinDuquesnoy/QDarkStyleSheet
+RESOURCES += qdarkstyle/dark/darkstyle.qrc
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
