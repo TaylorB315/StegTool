@@ -77,7 +77,7 @@
           </widget>
          </item>
          <item row="4" column="0">
-          <widget class="QPushButton" name="TextUploadbtn">
+          <widget class="QPushButton" name="TextUploadBtn">
            <property name="maximumSize">
             <size>
              <width>150</width>
@@ -199,7 +199,7 @@
           </widget>
          </item>
          <item row="2" column="0">
-          <widget class="QTextEdit" name="textEdit_3">
+          <widget class="QTextEdit" name="TextInputBox">
            <property name="maximumSize">
             <size>
              <width>250</width>
@@ -209,7 +209,7 @@
           </widget>
          </item>
          <item row="3" column="2">
-          <widget class="QPushButton" name="pushButton_9">
+          <widget class="QPushButton" name="EncodeImageUploadBtn">
            <property name="font">
             <font>
              <weight>75</weight>
@@ -240,7 +240,7 @@
         </spacer>
        </item>
        <item row="0" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QFrame" name="frame_3">
+        <widget class="QFrame" name="ImageFrame">
          <property name="minimumSize">
           <size>
            <width>704</width>
@@ -253,6 +253,25 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
+         <widget class="QWidget" name="verticalLayoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>681</width>
+            <height>371</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QLabel" name="ImageLabel">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -279,7 +298,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_10">
+     <widget class="QPushButton" name="DecodeImageUploadBtn">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -373,5 +392,22 @@ p, li { white-space: pre-wrap; }
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>DecodeImageUploadBtn</sender>
+   <signal>clicked()</signal>
+   <receiver>EncodeImageUploadBtn</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>77</x>
+     <y>148</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>658</x>
+     <y>545</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

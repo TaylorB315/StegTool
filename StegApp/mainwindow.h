@@ -15,6 +15,12 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_EncodeImageUploadBtn_clicked();
+
+    void on_TextUploadBtn_clicked();
+
+
 private:
     Ui::MainWindow *ui;
 };
