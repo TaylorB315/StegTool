@@ -16,17 +16,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    main.cpp \
-    mainwindow.cpp
+    src/main.cpp \
+    src/mainwindow.cpp \
+    src/Image.cpp
 
 HEADERS += \
-    mainwindow.h
+    headers/mainwindow.h \
+    headers/Image.h
 
 FORMS += \
-    mainwindow.ui
+    forms/mainwindow.ui
 
 #For style sheet for details see - https://github.com/ColinDuquesnoy/QDarkStyleSheet
 RESOURCES += qdarkstyle/dark/darkstyle.qrc
+
+#For opencv libaries
+CONFIG += link_pkgconfig
+PKGCONFIG += opencv4
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
