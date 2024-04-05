@@ -110,13 +110,13 @@ void MainWindow::EncodeNoID(QString input){
         noise = 1;
         break;
     case(1):
-        noise = 4;
+        noise = 3;
         break;
     case(2):
-        noise = 6;
+        noise = 4;
         break;
     case(3):
-        noise = 8;
+        noise = 6;
         break;
     }
     for (int i = 0; i < ui->NumImages->value(); ++i){
