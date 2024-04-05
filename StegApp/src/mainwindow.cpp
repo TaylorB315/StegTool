@@ -136,8 +136,10 @@ void MainWindow::EncodeIncremental(QString input){
         break;
     case(2):
         noise = 6;
+        break;
     case(3):
         noise = 8;
+        break;
     }
     for (int i = 0; i < ui->NumImages->value(); ++i){
         inputId = input + QString::number(i);
@@ -157,8 +159,10 @@ void MainWindow::EncodeUniqueID(QString input){
         break;
     case(2):
         noise = 6;
+        break;
     case(3):
         noise = 8;
+        break;
     }
     for (int i = 0; i < ui->NumImages->value(); ++i){
         uniqueId =(QUuid::createUuid().toString());
@@ -172,6 +176,32 @@ void MainWindow::on_DecodeBtn_clicked()
     if(message.length() > 0) {
         ui->OutputBox->setText(message);
 
+    }
+    if(ui->saveText->checkState() == Qt::Checked){
+        if(ui->FilenameBox->text() == ""){
+            QFile file("../StegApp/output.txt");
+
+            if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                qDebug() << "Cannot open file for writing: " << file.errorString();
+                return;
+            }
+
+            QTextStream out(&file);
+            out << message;
+            file.close();
+        }
+        else{
+            QFile file("../StegApp/" + ui->FilenameBox->text() + ".txt");
+
+            if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                qDebug() << "Cannot open file for writing: " << file.errorString();
+                return;
+            }
+
+            QTextStream out(&file);
+            out << message;
+            file.close();
+        }
     }
     else{
         QMessageBox::critical(this, tr("Error"), tr("Please upload an encoded image"));
