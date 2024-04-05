@@ -5,7 +5,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QUuid>
-
+#include <cmath>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -80,6 +80,7 @@ void MainWindow::on_EncodeBtn_clicked()
     //TODO - Implement noise feature
     QString input = ui->TextInputBox->toPlainText();
     if(input.length()>0 && this->image != nullptr){
+        //FOR NOISE SELECT DO 2^noiseSelect index
         switch(ui->LabelSelect->currentIndex()){
         case(0):
             EncodeNoID(input);
@@ -100,24 +101,65 @@ void MainWindow::on_EncodeBtn_clicked()
 }
 
 void MainWindow::EncodeNoID(QString input){
+    int noise = 0;
+    switch(ui->NoiseSelect->currentIndex()){
+    case(0):
+        noise = 1;
+        break;
+    case(1):
+        noise = 4;
+        break;
+    case(2):
+        noise = 6;
+        break;
+    case(3):
+        noise = 8;
+        break;
+    }
     for (int i = 0; i < ui->NumImages->value(); ++i){
-        this->image->encode((input.toStdString().c_str()),(QString::number(i)).toStdString().c_str());
+        this->image->encode((input.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise);
     }
 }
 
 void MainWindow::EncodeIncremental(QString input){
     QString inputId;
+    int noise = 0;
+    switch(ui->NoiseSelect->currentIndex()){
+    case(0):
+        noise = 1;
+        break;
+    case(1):
+        noise = 4;
+        break;
+    case(2):
+        noise = 6;
+    case(3):
+        noise = 8;
+    }
     for (int i = 0; i < ui->NumImages->value(); ++i){
         inputId = input + QString::number(i);
-        this->image->encode((inputId.toStdString().c_str()),(QString::number(i)).toStdString().c_str());
+        this->image->encode((inputId.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise);
     }
 }
 
 void MainWindow::EncodeUniqueID(QString input){
     QString uniqueId;
+    int noise = 0;
+    switch(ui->NoiseSelect->currentIndex()){
+    case(0):
+        noise = 1;
+        break;
+    case(1):
+        noise = 4;
+        break;
+    case(2):
+        noise = 6;
+    case(3):
+        noise = 8;
+    }
     for (int i = 0; i < ui->NumImages->value(); ++i){
         uniqueId =(QUuid::createUuid().toString());
-        this->image->encode(((input+uniqueId).toStdString().c_str()),(uniqueId).toStdString().c_str());
+        this->image->encode(((input+uniqueId).toStdString().c_str()),(uniqueId).toStdString().c_str(),noise);
     }
 }
 
