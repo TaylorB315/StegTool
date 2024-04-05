@@ -43,6 +43,7 @@ void MainWindow::on_EncodeImageUploadBtn_clicked()
         if (pixmap.load(fileName)){
             ui->ImageLabel->setPixmap(pixmap.scaled(ui->ImageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
             ui->ImageFrame->setStyleSheet("");
+            ui->OutputBox->setText("");
             this->image = new Image(fileName.toStdString().c_str());
         }
         else{
@@ -80,7 +81,6 @@ void MainWindow::on_EncodeBtn_clicked()
     //TODO - Implement noise feature
     QString input = ui->TextInputBox->toPlainText();
     if(input.length()>0 && this->image != nullptr){
-        //FOR NOISE SELECT DO 2^noiseSelect index
         switch(ui->LabelSelect->currentIndex()){
         case(0):
             EncodeNoID(input);
@@ -94,6 +94,9 @@ void MainWindow::on_EncodeBtn_clicked()
         }
 
         ui->ImageFrame->setStyleSheet("QFrame { border: 2px solid green; }");
+        //Image has been edited for encoding so needs to be reloaded to avoid encoding over previous work
+        QString fileName = this->image->filename;
+        this->image = new Image(fileName.toStdString().c_str());
     }
     else{
         QMessageBox::critical(this, tr("Error"), tr("Please upload an image and add text before generating"));

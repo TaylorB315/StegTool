@@ -6,10 +6,10 @@
 
 class Image {
 public:
-    Image(){printf("No image loaded");};
     Image(const char*);
     void encode(const char* message ,const char* identifier = nullptr, int noise = 1);
     QString decode();
+    QString filename;
 
 private:
     bool read (const char*);

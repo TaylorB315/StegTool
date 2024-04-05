@@ -4,6 +4,7 @@
 Image::Image(const char* filename) {
     if(read(filename)) {
         printf("Read %s\n", filename);
+        this->filename = filename;
 	}
     else {
         printf("Failed to read %s\n", filename);
@@ -26,7 +27,6 @@ bool Image::write(const char* filename){
 }
 
 void Image::encode(const char* message, const char* identifier, int noise){
-    qDebug() << noise;
 	//Len is the length in bits of the message
     int len = strlen(message) * 8;
     if(len + STEG_HEADER_SIZE > size*noise) {
