@@ -78,18 +78,38 @@ void MainWindow::on_TextUploadBtn_clicked()
 
 void MainWindow::on_EncodeBtn_clicked()
 {
-    //TODO - Implement noise feature
     QString input = ui->TextInputBox->toPlainText();
     if(input.length()>0 && this->image != nullptr){
-        switch(ui->LabelSelect->currentIndex()){
+        bool redundancy = false;
+        if (ui->RedundancyCheck->checkState() == Qt::Checked){
+            redundancy = true;
+        }
+
+        int noise = 0;
+        switch(ui->NoiseSelect->currentIndex()){
         case(0):
-            EncodeNoID(input);
+            noise = 1;
             break;
         case(1):
-            EncodeIncremental(input);
+            noise = 3;
             break;
         case(2):
-            EncodeUniqueID(input);
+            noise = 4;
+            break;
+        case(3):
+            noise = 6;
+            break;
+        }
+
+        switch(ui->LabelSelect->currentIndex()){
+        case(0):
+            EncodeNoID(input, noise, redundancy);
+            break;
+        case(1):
+            EncodeIncremental(input, noise, redundancy);
+            break;
+        case(2):
+            EncodeUniqueID(input, noise, redundancy);
             break;
         }
 
@@ -103,70 +123,25 @@ void MainWindow::on_EncodeBtn_clicked()
     }
 }
 
-void MainWindow::EncodeNoID(QString input){
-    int noise = 0;
-    switch(ui->NoiseSelect->currentIndex()){
-    case(0):
-        noise = 1;
-        break;
-    case(1):
-        noise = 3;
-        break;
-    case(2):
-        noise = 4;
-        break;
-    case(3):
-        noise = 6;
-        break;
-    }
+void MainWindow::EncodeNoID(QString input, int noise, bool redundancy){
     for (int i = 0; i < ui->NumImages->value(); ++i){
-        this->image->encode((input.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise);
+        this->image->encode((input.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise, redundancy);
     }
 }
 
-void MainWindow::EncodeIncremental(QString input){
+void MainWindow::EncodeIncremental(QString input, int noise, bool redundancy){
     QString inputId;
-    int noise = 0;
-    switch(ui->NoiseSelect->currentIndex()){
-    case(0):
-        noise = 1;
-        break;
-    case(1):
-        noise = 4;
-        break;
-    case(2):
-        noise = 6;
-        break;
-    case(3):
-        noise = 8;
-        break;
-    }
     for (int i = 0; i < ui->NumImages->value(); ++i){
         inputId = input + QString::number(i);
-        this->image->encode((inputId.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise);
+        this->image->encode((inputId.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise, redundancy);
     }
 }
 
-void MainWindow::EncodeUniqueID(QString input){
+void MainWindow::EncodeUniqueID(QString input, int noise, bool redundancy){
     QString uniqueId;
-    int noise = 0;
-    switch(ui->NoiseSelect->currentIndex()){
-    case(0):
-        noise = 1;
-        break;
-    case(1):
-        noise = 4;
-        break;
-    case(2):
-        noise = 6;
-        break;
-    case(3):
-        noise = 8;
-        break;
-    }
     for (int i = 0; i < ui->NumImages->value(); ++i){
         uniqueId =(QUuid::createUuid().toString());
-        this->image->encode(((input+uniqueId).toStdString().c_str()),(uniqueId).toStdString().c_str(),noise);
+        this->image->encode(((input+uniqueId).toStdString().c_str()),(uniqueId).toStdString().c_str(),noise, redundancy);
     }
 }
 
@@ -175,32 +150,31 @@ void MainWindow::on_DecodeBtn_clicked()
     QString message = this->image->decode();
     if(message.length() > 0) {
         ui->OutputBox->setText(message);
+        if(ui->saveText->checkState() == Qt::Checked){
+            if(ui->FilenameBox->text() == ""){
+                QFile file("../StegApp/output.txt");
 
-    }
-    if(ui->saveText->checkState() == Qt::Checked){
-        if(ui->FilenameBox->text() == ""){
-            QFile file("../StegApp/output.txt");
+                if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                    qDebug() << "Cannot open file for writing: " << file.errorString();
+                    return;
+                }
 
-            if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-                qDebug() << "Cannot open file for writing: " << file.errorString();
-                return;
+                QTextStream out(&file);
+                out << message;
+                file.close();
             }
+            else{
+                QFile file("../StegApp/" + ui->FilenameBox->text() + ".txt");
 
-            QTextStream out(&file);
-            out << message;
-            file.close();
-        }
-        else{
-            QFile file("../StegApp/" + ui->FilenameBox->text() + ".txt");
+                if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                    qDebug() << "Cannot open file for writing: " << file.errorString();
+                    return;
+                }
 
-            if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-                qDebug() << "Cannot open file for writing: " << file.errorString();
-                return;
+                QTextStream out(&file);
+                out << message;
+                file.close();
             }
-
-            QTextStream out(&file);
-            out << message;
-            file.close();
         }
     }
     else{

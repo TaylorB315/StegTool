@@ -28,8 +28,8 @@ private slots:
 private:
     Ui::MainWindow *ui;
     Image *image = nullptr;
-    void EncodeNoID(QString);
-    void EncodeIncremental(QString);
-    void EncodeUniqueID(QString);
+    void EncodeNoID(QString, int, bool);
+    void EncodeIncremental(QString, int, bool);
+    void EncodeUniqueID(QString, int, bool);
 };
 #endif // MAINWINDOW_H

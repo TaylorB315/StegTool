@@ -1,6 +1,7 @@
 #include "headers/Image.h"
 #include <iostream>
 #include<QDebug>
+#include <memory>
 Image::Image(const char* filename) {
     if(read(filename)) {
         //qDebug() << "Read " << filename;
@@ -26,8 +27,7 @@ bool Image::write(const char* filename){
 	return cv::imwrite(filename, image);
 }
 
-void Image::encode(const char* message, const char* identifier, int noise){
-
+void Image::encode(const char* message, const char* identifier, int noise, bool redundancy){
 //    TEST CODE MAKES THE MESSSAGE AS LONG AS POSSIBLE
 //    char *message = new char[((size*noise)- STEG_HEADER_SIZE)/8];
 //    for (int i = 0; i < (((size*noise)- STEG_HEADER_SIZE)/8)-2; ++i){
@@ -35,100 +35,127 @@ void Image::encode(const char* message, const char* identifier, int noise){
 //    }
 
 //    message[(((size*noise)- STEG_HEADER_SIZE)/8)-1] = '\0';
-
     //Len is the length in bits of the message
     int len = strlen(message) * 8;
     if(len + STEG_HEADER_SIZE > size*noise) {
         qDebug() << "This message is too large" << len+STEG_HEADER_SIZE << " bits / " << size*noise << " bits";
         return;
     }
-	//pixel is an array where each item is the pixel data for a channel in that pixel
-	//FOR EVERY BYTE IN THE IMAGE DATA, SHIFTS IT RIGHT BY INCREASING VALUES
-	//THIS CAUSES EACH BIT OF LEN TO BE ANDED WITH 1UL TO CLEAR ALL EXCEPT THE RIGHTMOST BIT
-	//I.E 10110111 WOULD BECOME 0000001 AND 11011010 WOULD BECOME 00000000 
-	//THE RIGHTMOST BIT IS THEN OR'ED WITH data[i]
-	//COMPARING THE ONE BIT ISOLATED WITH LEN WITH data[i] MEANS THAT IF THE RIGHTMOST BIT OF LEN IS 1 THEN data[i] RIGHTMOST BIT
-	//BECOMES THE SAME
-
-	//this loop is for adding the length of the hidden message to the start of the image
-
+    bool firstRun = true;
     int channel = 0;
-    int position = 0;;
-    for(int i = 0; i < MESSAGE_LEN_HEADER; ++i){
-        if (channel >= image.channels()){
-            ++position;
-            channel = 0;
+    int position = 0;
+    int row = 0;
+    int col = 0;
+    int offset = 0;
+    int messageBit = 0;
+    int noiseBitPosition = 0;
+    unsigned char mask = 0;
+    while(redundancy || firstRun){
+        if (position+(position-offset) > (size/image.channels())){
+            redundancy=false;
+            break;
         }
-        int row = position / image.cols;
-        int col = position % image.cols;
-		cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
-        pixel[channel] &= 0xFE;
-        pixel[channel] |= (len >> (MESSAGE_LEN_HEADER - 1 - i)) & 1UL;
-        ++channel;
-	}
-
-    //embeds the noise amount as meta data within it's section
-    channel = 0;
-    position = MESSAGE_LEN_HEADER;;
-    for(int i = 0; i < NOISE_AMOUNT_HEADER; ++i){
-        if (channel >= image.channels()){
-            ++position;
-            channel = 0;
+        if(!firstRun){
+            offset = position + 1;
         }
-        int row = position / image.cols;
-        int col = position % image.cols;
-        cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
-        pixel[channel] &= 0xFE;
-        pixel[channel] |= (noise >> (NOISE_AMOUNT_HEADER - 1 - i)) & 1UL;
-        ++channel;
-    }
-	//this loop is for adding the message itself
-	//same principal as before only difference is we are shifting along the message binary
-	//the shift amount is the length to make the message binary be added right to left instead of left to right
-	//i in message[i/8] is divided by 8 as i is meant to iterate up to len which is stored in bits but message is an array of bytes
-	//dividing by 8 means that up to 8 the index is zero (1/8=0.125=0) and then after 8 it is 1 (9/8=1.125=1)
-	//division is always rounded down
-//	for(int i = 0; i<len; ++i){
-//        int row = (i+STEG_HEADER_SIZE) / image.cols;
-//        int col = (i+STEG_HEADER_SIZE) % image.cols;
-//		cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
-//		pixel[0] &= 0xFE;
-//		pixel[0] |= (message[i/8] >> ((len-1-i)%8)) & 1;
-//	}
+        //pixel is an array where each item is the pixel data for a channel in that pixel
+        //FOR EVERY BYTE IN THE IMAGE DATA, SHIFTS IT RIGHT BY INCREASING VALUES
+        //THIS CAUSES EACH BIT OF LEN TO BE ANDED WITH 1UL TO CLEAR ALL EXCEPT THE RIGHTMOST BIT
+        //I.E 10110111 WOULD BECOME 0000001 AND 11011010 WOULD BECOME 00000000
+        //THE RIGHTMOST BIT IS THEN OR'ED WITH data[i]
+        //COMPARING THE ONE BIT ISOLATED WITH LEN WITH data[i] MEANS THAT IF THE RIGHTMOST BIT OF LEN IS 1 THEN data[i] RIGHTMOST BIT
+        //BECOMES THE SAME
 
-    channel = 0;
-    position = STEG_HEADER_SIZE;
-    for(int i = 0; i < len; ++i) {
-        //position only increases once we've reached the LSB
-        if (i > 0 && i % noise == 0){
-            ++channel;
+        //this loop is for adding the length of the hidden message to the start of the image
+
+        channel = 0;
+        position = offset;
+        row = 0;
+        col = 0;
+
+        for(int i = 0; i < MESSAGE_LEN_HEADER; ++i){
             if (channel >= image.channels()){
-                channel = 0;
                 ++position;
+                channel = 0;
             }
+            row = position / image.cols;
+            col = position % image.cols;
+            cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
+            pixel[channel] &= 0xFE;
+            pixel[channel] |= (len >> (MESSAGE_LEN_HEADER - 1 - i)) & 1UL;
+            ++channel;
         }
-        int row = position / image.cols;
-        int col = position % image.cols;
-        cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
 
-        // Calculate the noiseBitPosition for the current bit
-        // This is a countdown from (noise-1) to 0, then wraps around
-        int noiseBitPosition = (noise - 1) - ((i % noise) % noise);
+        //embeds the noise amount as meta data within it's section
+        channel = 0;
+        position = MESSAGE_LEN_HEADER + offset;
+        row = 0;
+        col = 0;
 
-        // Extract the current bit from the message
-        int messageBit = (message[i / 8] >> (7 - (i % 8))) & 1;
+        for(int i = 0; i < NOISE_AMOUNT_HEADER; ++i){
+            if (channel >= image.channels()){
+                ++position;
+                channel = 0;
+            }
+            row = position / image.cols;
+             col = position % image.cols;
+            cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
+            pixel[channel] &= 0xFE;
+            pixel[channel] |= (noise >> (NOISE_AMOUNT_HEADER - 1 - i)) & 1UL;
+            ++channel;
+        }
+        //this loop is for adding the message itself
+        //same principal as before only difference is we are shifting along the message binary
+        //the shift amount is the length to make the message binary be added right to left instead of left to right
+        //i in message[i/8] is divided by 8 as i is meant to iterate up to len which is stored in bits but message is an array of bytes
+        //dividing by 8 means that up to 8 the index is zero (1/8=0.125=0) and then after 8 it is 1 (9/8=1.125=1)
+        //division is always rounded down
+    //	for(int i = 0; i<len; ++i){
+    //        int row = (i+STEG_HEADER_SIZE) / image.cols;
+    //        int col = (i+STEG_HEADER_SIZE) % image.cols;
+    //		cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
+    //		pixel[0] &= 0xFE;
+    //		pixel[0] |= (message[i/8] >> ((len-1-i)%8)) & 1;
+    //	}
 
-        // Create a mask to set all bits to 1 except target bit
-        unsigned char mask = ~(1 << noiseBitPosition);
-        // ANDing the mask leave all bits unchanged except the target bit which becomes zero
-        // shifting the message bit means that it moves to the position og the target bit
-        // i.e if target bit is 3 message bit becomes 1000 instead of just 1
-        // ORing the two sets the pixel bit to 1 if messagebit is 1 and leaves it as zero if it is zero
-        pixel[channel] = (pixel[channel] & mask) | (messageBit << noiseBitPosition);
+        channel = 0;
+        position = STEG_HEADER_SIZE + offset;
+        row = 0;
+        col = 0;
+        messageBit = 0;
+        noiseBitPosition = 0;
+        mask = 0;
+        for(int i = 0; i < len; ++i) {
+            //position only increases once we've reached the LSB
+            if (i > 0 && i % noise == 0){
+                ++channel;
+                if (channel >= image.channels()){
+                    channel = 0;
+                    ++position;
+                }
+            }
+            row = position / image.cols;
+            col = position % image.cols;
+            cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
 
+            // Calculate the noiseBitPosition for the current bit
+            // This is a countdown from (noise-1) to 0, then wraps around
+            noiseBitPosition = (noise - 1) - ((i % noise) % noise);
+
+            // Extract the current bit from the message
+            messageBit = (message[i / 8] >> (7 - (i % 8))) & 1;
+
+            // Create a mask to set all bits to 1 except target bit
+            mask = ~(1 << noiseBitPosition);
+            // ANDing the mask leave all bits unchanged except the target bit which becomes zero
+            // shifting the message bit means that it moves to the position og the target bit
+            // i.e if target bit is 3 message bit becomes 1000 instead of just 1
+            // ORing the two sets the pixel bit to 1 if messagebit is 1 and leaves it as zero if it is zero
+            pixel[channel] = (pixel[channel] & mask) | (messageBit << noiseBitPosition);
+
+        }
+        firstRun = false;
     }
-
-
     write((QString("../StegApp/imgs/output") + identifier + ".png").toStdString().c_str());
 }
 
@@ -174,7 +201,7 @@ QString Image::decode() {
     //Same logic as before this time applied to the buffer and stored in the message as a char array.
     position = STEG_HEADER_SIZE;
     channel = 0;
-    if(len<(image.cols*image.rows)){
+    if(len<(size)){
         for(int i = 0; i < len; ++i){
             if (i > 0 && i % depth == 0){
                 ++channel;
