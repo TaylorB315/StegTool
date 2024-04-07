@@ -1,12 +1,9 @@
 #include "headers/mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QFile>
 #include <QTextStream>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QUuid>
-#include <cmath>
-#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -36,7 +33,7 @@ void MainWindow::on_EncodeImageUploadBtn_clicked()
     //opens a file input that filters for images only
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     tr("Open Image"), "",
-                                                   tr("Image Files (*.png *.jpg *.jpeg *.bmp *.gif)"));
+                                                   tr("Image Files (*.png *.jpg *.jpeg *.bmp)"));
     if (!fileName.isEmpty()) {
         // Scale the image while preserving the aspect ratio and then set it on the label
         QPixmap pixmap;
@@ -47,7 +44,7 @@ void MainWindow::on_EncodeImageUploadBtn_clicked()
             this->image = new Image(fileName.toStdString().c_str());
         }
         else{
-            qDebug() << "pixmap failed to load";
+            QMessageBox::critical(this, tr("Error"), tr("Could not open the file"));
         }
 
     }
@@ -79,12 +76,14 @@ void MainWindow::on_TextUploadBtn_clicked()
 void MainWindow::on_EncodeBtn_clicked()
 {
     QString input = ui->TextInputBox->toPlainText();
+    //makes sure the user has given an image and text
     if(input.length()>0 && this->image != nullptr){
+        //checks if redundacny box is checked
         bool redundancy = false;
         if (ui->RedundancyCheck->checkState() == Qt::Checked){
             redundancy = true;
         }
-
+        //gets the noise
         int noise = 0;
         switch(ui->NoiseSelect->currentIndex()){
         case(0):
@@ -100,6 +99,7 @@ void MainWindow::on_EncodeBtn_clicked()
             noise = 6;
             break;
         }
+        //runs with selected identifier type
         bool success = false;
         switch(ui->LabelSelect->currentIndex()){
         case(0):
@@ -112,6 +112,8 @@ void MainWindow::on_EncodeBtn_clicked()
             success = EncodeUniqueID(input, noise, redundancy);
             break;
         }
+        //if the encode functions returned true, change the border to green to signify
+        //else change it to red and show an error box informing the user
         if(success){
             ui->ImageFrame->setStyleSheet("QFrame { border: 2px solid green; }");
             //Image has been edited for encoding so needs to be reloaded to avoid encoding over previous work
@@ -169,15 +171,19 @@ bool MainWindow::EncodeUniqueID(QString input, int noise, bool redundancy){
 
 void MainWindow::on_DecodeBtn_clicked()
 {
+    //decodes to get the message
     QString message = this->image->decode();
+    //if it is zero then decoding has failed
     if(message.length() > 0) {
+        //displays encoded text
         ui->OutputBox->setText(message);
+        //writes to file if selected
         if(ui->saveText->checkState() == Qt::Checked){
             if(ui->FilenameBox->text() == ""){
                 QFile file("../StegApp/output.txt");
 
                 if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-                    qDebug() << "Cannot open file for writing: " << file.errorString();
+                    QMessageBox::critical(this, tr("Error"), tr("Could not write to file"));
                     return;
                 }
 
@@ -185,11 +191,12 @@ void MainWindow::on_DecodeBtn_clicked()
                 out << message;
                 file.close();
             }
+            //uses name if given
             else{
                 QFile file("../StegApp/" + ui->FilenameBox->text() + ".txt");
 
                 if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-                    qDebug() << "Cannot open file for writing: " << file.errorString();
+                    QMessageBox::critical(this, tr("Error"), tr("could not right to file"));
                     return;
                 }
 
