@@ -7,13 +7,13 @@
 class Image {
 public:
     Image(const char*);
-    void encode(const char* message ,const char* identifier = nullptr, int noise = 1, bool redundancy = false);
+    bool encode(const char* message ,const char* identifier = nullptr, int noise = 1, bool redundancy = false);
     QString decode();
     QString filename;
-    bool write (const char*);
 
 private:
     bool read (const char*);
+    bool write (const char*);
     cv::Mat image;
 	unsigned int size = 0;
 };

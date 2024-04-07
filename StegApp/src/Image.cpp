@@ -27,7 +27,7 @@ bool Image::write(const char* filename){
 	return cv::imwrite(filename, image);
 }
 
-void Image::encode(const char* message, const char* identifier, int noise, bool redundancy){
+bool Image::encode(const char* message, const char* identifier, int noise, bool redundancy){
 //    TEST CODE MAKES THE MESSSAGE AS LONG AS POSSIBLE
 //    char *message = new char[((size*noise)- STEG_HEADER_SIZE)/8];
 //    for (int i = 0; i < (((size*noise)- STEG_HEADER_SIZE)/8)-2; ++i){
@@ -38,8 +38,7 @@ void Image::encode(const char* message, const char* identifier, int noise, bool 
     //Len is the length in bits of the message
     int len = strlen(message) * 8;
     if(len + STEG_HEADER_SIZE > size*noise) {
-        qDebug() << "This message is too large" << len+STEG_HEADER_SIZE << " bits / " << size*noise << " bits";
-        return;
+        return false;
     }
     bool firstRun = true;
     int channel = 0;
@@ -156,7 +155,8 @@ void Image::encode(const char* message, const char* identifier, int noise, bool 
         }
         firstRun = false;
     }
-    write((QString("../StegApp/imgs/output") + identifier + ".png").toStdString().c_str());
+    write((QString("../StegApp/imgs/output/output") + identifier + ".png").toStdString().c_str());
+    return true;
 }
 
 QString Image::decode() {
@@ -178,7 +178,7 @@ QString Image::decode() {
         len = (len << 1) | (pixel[channel] & 1);
         ++channel;
 	}
-    //creates the buffer with the size of the message length. +7 so it doesn't cut off early
+    //creates the buffer with the size of the message length. +10 so it doesn't cut off early
     char *buffer = new char[(len+10)/8];
     memset(buffer, 0, (len + 10) / 8);
 
@@ -201,7 +201,9 @@ QString Image::decode() {
     //Same logic as before this time applied to the buffer and stored in the message as a char array.
     position = STEG_HEADER_SIZE;
     channel = 0;
-    if(len<(size)){
+    //Checks that the size of the message given by the metadata could fit in the image and that the depth is within range
+    //if either are false we can be certain the meta data is wrong and therefore the image is not encoded/encoded data was corrupted
+    if(len<(size*depth) && (depth > 0 && depth <= 6)){
         for(int i = 0; i < len; ++i){
             if (i > 0 && i % depth == 0){
                 ++channel;
