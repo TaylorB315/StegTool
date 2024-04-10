@@ -11,6 +11,7 @@ Image::Image(const char* filename) {
 }
 
 bool Image::read(const char* filename) {
+    this->image.release();
 	this->image = cv::imread(filename, cv::IMREAD_UNCHANGED);
     // Check if the image was loaded successfully
     if (image.empty()) {
@@ -22,13 +23,22 @@ bool Image::read(const char* filename) {
 	return true;
 }
 
-bool Image::write(const char* filename){
-	return cv::imwrite(filename, image);
+void Image::write(const char* fileName){
+    if (fileName == nullptr) {
+        std::cerr << "Filename is null!" << std::endl;
+        return;
+    }
+    if (this->image.empty()) {
+        std::cerr << "Attempt to write an empty image!" << std::endl;
+        return;
+    }
+    cv::imwrite(fileName, this->image);
 }
 
 bool Image::encode(const char* message, const char* identifier, int noise, bool redundancy){
     //Len is the length in bits of the message
     int len = strlen(message) * 8;
+
     //if the len of the message+the header is bigger than the number of bytes * the bits used per btye (noise)
     //then the text will not fit
     if(len + STEG_HEADER_SIZE > size*noise) {
@@ -82,7 +92,6 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
 
 
         //this loop is for adding the length of the hidden message to the start of the image
-
         channel = 0;
         position = offset;
         row = 0;
@@ -118,7 +127,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
                 channel = 0;
             }
             row = position / image.cols;
-             col = position % image.cols;
+            col = position % image.cols;
             cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
             pixel[channel] &= 0xFE;
             pixel[channel] |= (noise >> (NOISE_AMOUNT_HEADER - 1 - i)) & 1UL;
@@ -174,7 +183,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
 
 QString Image::decode() {
     unsigned int len = 0;
-    int depth =0;
+    int depth = 0;
 
 	//(len<<1) shifts everything left each time so that the data is loaded into the bit right to left
     //pixel[channel] is anded to 1 to get the rightmost bit same as before
