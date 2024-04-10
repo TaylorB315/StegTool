@@ -9,13 +9,15 @@
 class Image {
 public:
     Image(const char*);
+    Image(){};
+    bool isEmpty(){return this->image.empty();}
     bool encode(const char* message ,const char* identifier = nullptr, int noise = 1, bool redundancy = false);
     QString decode();
     QString filename;
 
 private:
     bool read (const char*);
-    bool write (const char*);
+    void write (const char*);
     cv::Mat image;
 	unsigned int size = 0;
 };

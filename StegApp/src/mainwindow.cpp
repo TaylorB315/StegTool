@@ -41,7 +41,7 @@ void MainWindow::on_EncodeImageUploadBtn_clicked()
             ui->ImageLabel->setPixmap(pixmap.scaled(ui->ImageLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
             ui->ImageFrame->setStyleSheet("");
             ui->OutputBox->setText("");
-            this->image = new Image(fileName.toStdString().c_str());
+            this->image = Image(fileName.toUtf8().constData());
         }
         else{
             QMessageBox::critical(this, tr("Error"), tr("Could not open the file"));
@@ -77,7 +77,7 @@ void MainWindow::on_EncodeBtn_clicked()
 {
     QString input = ui->TextInputBox->toPlainText();
     //makes sure the user has given an image and text
-    if(input.length()>0 && this->image != nullptr){
+    if(input.length()>0 && this->image.isEmpty() == false){
         //checks if redundacny box is checked
         bool redundancy = false;
         if (ui->RedundancyCheck->checkState() == Qt::Checked){
@@ -117,14 +117,14 @@ void MainWindow::on_EncodeBtn_clicked()
         if(success){
             ui->ImageFrame->setStyleSheet("QFrame { border: 2px solid green; }");
             //Image has been edited for encoding so needs to be reloaded to avoid encoding over previous work
-            QString fileName = this->image->filename;
-            this->image = new Image(fileName.toStdString().c_str());
+            QString fileName = this->image.filename;
+            this->image =  Image(fileName.toUtf8().constData());
         }
         else{
             ui->ImageFrame->setStyleSheet("QFrame { border: 2px solid red; }");
             //Reload image here for safety, not sure if neccessary
-            QString fileName = this->image->filename;
-            this->image = new Image(fileName.toStdString().c_str());
+            QString fileName = this->image.filename;
+            this->image = Image(fileName.toUtf8().constData());
 
             QMessageBox::critical(this, tr("Error"), tr("You have entered too much text for this image, please shorten the input or increase the noise"));
         }
@@ -137,7 +137,7 @@ void MainWindow::on_EncodeBtn_clicked()
 
 bool MainWindow::EncodeNoID(QString input, int noise, bool redundancy){
     for (int i = 0; i < ui->NumImages->value(); ++i){
-        if(!(this->image->encode((input.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise, redundancy))){
+        if(!(this->image.encode((input.toUtf8().constData()),(QString::number(i)).toStdString().c_str(),noise, redundancy))){
             return false;
             break;
         }
@@ -149,7 +149,7 @@ bool MainWindow::EncodeIncremental(QString input, int noise, bool redundancy){
     QString inputId;
     for (int i = 0; i < ui->NumImages->value(); ++i){
         inputId = input + QString::number(i);
-        if(!(this->image->encode((inputId.toStdString().c_str()),(QString::number(i)).toStdString().c_str(),noise, redundancy))){
+        if(!(this->image.encode((inputId.toUtf8().constData()),(QString::number(i)).toStdString().c_str(),noise, redundancy))){
             return false;
             break;
         }
@@ -161,7 +161,7 @@ bool MainWindow::EncodeUniqueID(QString input, int noise, bool redundancy){
     QString uniqueId;
     for (int i = 0; i < ui->NumImages->value(); ++i){
         uniqueId =(QUuid::createUuid().toString());
-        if(!(this->image->encode(((input+uniqueId).toStdString().c_str()),(uniqueId).toStdString().c_str(),noise, redundancy))){
+        if(!(this->image.encode(((input+uniqueId).toUtf8().constData()),(uniqueId).toStdString().c_str(),noise, redundancy))){
             return false;
             break;
         }
@@ -172,7 +172,7 @@ bool MainWindow::EncodeUniqueID(QString input, int noise, bool redundancy){
 void MainWindow::on_DecodeBtn_clicked()
 {
     //decodes to get the message
-    QString message = this->image->decode();
+    QString message = this->image.decode();
     //if it is zero then decoding has failed
     if(message.length() > 0) {
         //displays encoded text

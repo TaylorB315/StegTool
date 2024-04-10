@@ -27,7 +27,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    Image *image = nullptr;
+    Image image = Image();
     bool EncodeNoID(QString, int, bool);
     bool EncodeIncremental(QString, int, bool);
     bool EncodeUniqueID(QString, int, bool);
