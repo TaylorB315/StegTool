@@ -12,7 +12,7 @@ Image::Image(const char* filename) {
 
 bool Image::read(const char* filename) {
     this->image.release();
-	this->image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    this->image = cv::imread(filename, cv::IMREAD_UNCHANGED);
     // Check if the image was loaded successfully
     if (image.empty()) {
         qDebug() << "Could not open or find the image.";
@@ -106,7 +106,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             }
             row = position / image.cols;
             col = position % image.cols;
-            cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
+            cv::Vec4b &pixel = image.at<cv::Vec4b>(row, col);
             //sets the LSB to zero
             pixel[channel] &= 0xFE;
             //shifts the len binary value along so that the next bit in the Loop is it's LSB, the &1Ul sets everything except the LSB to zero
@@ -128,7 +128,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             }
             row = position / image.cols;
             col = position % image.cols;
-            cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
+            cv::Vec4b &pixel = image.at<cv::Vec4b>(row, col);
             pixel[channel] &= 0xFE;
             pixel[channel] |= (noise >> (NOISE_AMOUNT_HEADER - 1 - i)) & 1UL;
             ++channel;
@@ -153,7 +153,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             }
             row = position / image.cols;
             col = position % image.cols;
-            cv::Vec3b &pixel = image.at<cv::Vec3b>(row, col);
+            cv::Vec4b &pixel = image.at<cv::Vec4b>(row, col);
 
             // Calculate the noiseBitPosition for the current bit
             // This is a countdown from (noise-1) to 0, then wraps around
@@ -197,7 +197,7 @@ QString Image::decode() {
         }
         int row = position / image.cols;
         int col = position % image.cols;
-		cv::Vec3b pixel = image.at<cv::Vec3b>(row, col);
+        cv::Vec4b pixel = image.at<cv::Vec4b>(row, col);
         len = (len << 1) | (pixel[channel] & 1);
         ++channel;
 	}
@@ -215,7 +215,7 @@ QString Image::decode() {
         }
         int row = position / image.cols;
         int col = position % image.cols;
-        cv::Vec3b pixel = image.at<cv::Vec3b>(row, col);
+        cv::Vec4b pixel = image.at<cv::Vec4b>(row, col);
         depth = (depth << 1) | (pixel[channel] & 1);
         ++channel;
     }
@@ -237,7 +237,7 @@ QString Image::decode() {
             }
             int row = position / image.cols;
             int col = position % image.cols;
-            cv::Vec3b pixel = image.at<cv::Vec3b>(row, col);
+            cv::Vec4b pixel = image.at<cv::Vec4b>(row, col);
 
             //same logic as before however the mask is not needed as we do not need to clear the buffer because we are appending it
             int noiseBitPosition = (depth - 1) - ((i % depth) % depth);

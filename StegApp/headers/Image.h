@@ -11,7 +11,7 @@ public:
     Image(const char*);
     Image(){};
     bool isEmpty(){return this->image.empty();}
-    bool encode(const char* message ,const char* identifier = nullptr, int noise = 1, bool redundancy = false);
+    bool encode(const char* message, const char* identifier = nullptr, int noise = 1, bool redundancy = false);
     QString decode();
     QString filename;
 
