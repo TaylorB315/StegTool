@@ -74,7 +74,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
     //loop runs once, then if redundancy is on (user has ticked the box) it loops until there is no more room for redundancy
     while(redundancy || firstRun){
         //checks if there is space in the image for another loop
-        if (position+(position-offset) > (size/image.channels())){
+        if (position+(position-offset) >= (size/image.channels())){
             redundancy=false;
             break;
         }
@@ -106,12 +106,14 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             }
             row = position / image.cols;
             col = position % image.cols;
-            cv::Vec4b &pixel = image.at<cv::Vec4b>(row, col);
+            uchar* pRow = image.ptr<uchar>(row);
+            int index = (col * image.channels()) + channel;
+            uchar& pixel = pRow[index];
             //sets the LSB to zero
-            pixel[channel] &= 0xFE;
+            pixel &= 0xFE;
             //shifts the len binary value along so that the next bit in the Loop is it's LSB, the &1Ul sets everything except the LSB to zero
             //oring that with the current pixel channel data makes the LSB match the current len bit
-            pixel[channel] |= (len >> (MESSAGE_LEN_HEADER - 1 - i)) & 1UL;
+            pixel |= (len >> (MESSAGE_LEN_HEADER - 1 - i)) & 1UL;
             ++channel;
         }
 
@@ -128,9 +130,11 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             }
             row = position / image.cols;
             col = position % image.cols;
-            cv::Vec4b &pixel = image.at<cv::Vec4b>(row, col);
-            pixel[channel] &= 0xFE;
-            pixel[channel] |= (noise >> (NOISE_AMOUNT_HEADER - 1 - i)) & 1UL;
+            uchar* pRow = image.ptr<uchar>(row);
+            int index = (col * image.channels()) + channel;
+            uchar& pixel = pRow[index];
+            pixel &= 0xFE;
+            pixel |= (noise >> (NOISE_AMOUNT_HEADER - 1 - i)) & 1UL;
             ++channel;
         }
 
@@ -153,7 +157,9 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             }
             row = position / image.cols;
             col = position % image.cols;
-            cv::Vec4b &pixel = image.at<cv::Vec4b>(row, col);
+            uchar* pRow = image.ptr<uchar>(row);
+            int index = (col * image.channels()) + channel;
+            uchar& pixel = pRow[index];
 
             // Calculate the noiseBitPosition for the current bit
             // This is a countdown from (noise-1) to 0, then wraps around
@@ -172,7 +178,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             // shifting the message bit means that it moves to the position og the target bit
             // i.e if target bit is 3 message bit becomes 1000 instead of 0001
             // ORing the two sets the pixel bit to 1 if messagebit is 1 and leaves it as zero if it is zero
-            pixel[channel] = (pixel[channel] & mask) | (messageBit << noiseBitPosition);
+            pixel = (pixel & mask) | (messageBit << noiseBitPosition);
 
         }
         firstRun = false;
@@ -197,8 +203,10 @@ QString Image::decode() {
         }
         int row = position / image.cols;
         int col = position % image.cols;
-        cv::Vec4b pixel = image.at<cv::Vec4b>(row, col);
-        len = (len << 1) | (pixel[channel] & 1);
+        uchar* pRow = image.ptr<uchar>(row);
+        int index = (col * image.channels()) + channel;
+        uchar& pixel = pRow[index];
+        len = (len << 1) | (pixel & 1);
         ++channel;
 	}
     //creates the buffer with the size of the message length. +10 to be safe so it doesn't cut off early
@@ -215,8 +223,10 @@ QString Image::decode() {
         }
         int row = position / image.cols;
         int col = position % image.cols;
-        cv::Vec4b pixel = image.at<cv::Vec4b>(row, col);
-        depth = (depth << 1) | (pixel[channel] & 1);
+        uchar* pRow = image.ptr<uchar>(row);
+        int index = (col * image.channels()) + channel;
+        uchar& pixel = pRow[index];
+        depth = (depth << 1) | (pixel & 1);
         ++channel;
     }
 
@@ -237,11 +247,13 @@ QString Image::decode() {
             }
             int row = position / image.cols;
             int col = position % image.cols;
-            cv::Vec4b pixel = image.at<cv::Vec4b>(row, col);
+            uchar* pRow = image.ptr<uchar>(row);
+            int index = (col * image.channels()) + channel;
+            uchar& pixel = pRow[index];
 
             //same logic as before however the mask is not needed as we do not need to clear the buffer because we are appending it
             int noiseBitPosition = (depth - 1) - ((i % depth) % depth);
-            buffer[i/8] = (buffer[i/8] << 1) | ((pixel[channel] & (1 << noiseBitPosition)) >> noiseBitPosition);
+            buffer[i/8] = (buffer[i/8] << 1) | ((pixel & (1 << noiseBitPosition)) >> noiseBitPosition);
         }
     }
 	return buffer;
