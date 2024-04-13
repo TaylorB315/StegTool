@@ -106,8 +106,13 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
             }
             row = position / image.cols;
             col = position % image.cols;
+            //This is were we isolate the pixels byte
+            //pRow is a row of pixels, each byte is a byte in that row
             uchar* pRow = image.ptr<uchar>(row);
+            //index is how far we need to move along this row, plus the current of channel
+            //to get the current pixels current channel byte
             int index = (col * image.channels()) + channel;
+            //finally accessing the specific index in the row to change it
             uchar& pixel = pRow[index];
             //sets the LSB to zero
             pixel &= 0xFE;
