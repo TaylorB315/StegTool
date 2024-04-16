@@ -58,6 +58,41 @@
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
+       <item row="0" column="1" alignment="Qt::AlignHCenter">
+        <widget class="QFrame" name="ImageFrame">
+         <property name="minimumSize">
+          <size>
+           <width>704</width>
+           <height>396</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QWidget" name="verticalLayoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>681</width>
+            <height>371</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QLabel" name="ImageLabel">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
        <item row="2" column="0" colspan="3">
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="5" column="2">
@@ -184,6 +219,11 @@
              <string>Major</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Full</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="1" column="0">
@@ -246,41 +286,6 @@
           </size>
          </property>
         </spacer>
-       </item>
-       <item row="0" column="1" alignment="Qt::AlignHCenter">
-        <widget class="QFrame" name="ImageFrame">
-         <property name="minimumSize">
-          <size>
-           <width>704</width>
-           <height>396</height>
-          </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
-         </property>
-         <widget class="QWidget" name="verticalLayoutWidget">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>10</y>
-            <width>681</width>
-            <height>371</height>
-           </rect>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <widget class="QLabel" name="ImageLabel">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </widget>
        </item>
       </layout>
      </widget>

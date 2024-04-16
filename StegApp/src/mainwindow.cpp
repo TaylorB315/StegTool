@@ -98,6 +98,14 @@ void MainWindow::on_EncodeBtn_clicked()
         case(3):
             noise = 6;
             break;
+        case(4):
+            noise = 8;
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::warning(this, tr("Warning"), tr("Are you sure you want to use full noise?\n It may leave the image unrecognisable with long messages."),QMessageBox::Yes|QMessageBox::No);
+            if(reply == QMessageBox::No){
+                return;
+            }
+            break;
         }
         //runs with selected identifier type
         bool success = false;

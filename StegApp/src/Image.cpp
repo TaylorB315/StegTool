@@ -241,7 +241,7 @@ QString Image::decode() {
     channel = 0;
     //Checks that the size of the message given by the metadata could fit in the image and that the depth is within range
     //if either are false we can be certain the meta data is wrong and therefore the image is not encoded/encoded data was corrupted
-    if(len<(size*depth) && (depth > 0 && depth <= 6)){
+    if(len<(size*depth) && (depth > 0 && depth <= 8)){
         for(int i = 0; i < len; ++i){
             if (i > 0 && i % depth == 0){
                 ++channel;
