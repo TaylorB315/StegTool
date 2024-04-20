@@ -188,7 +188,7 @@ bool Image::encode(const char* message, const char* identifier, int noise, bool 
         }
         firstRun = false;
     }
-    write((QString("../StegApp/imgs/output/output") + identifier + ".png").toStdString().c_str());
+    write((QString("output") + identifier + ".png").toStdString().c_str());
     return true;
 }
 
